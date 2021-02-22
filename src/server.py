@@ -1,16 +1,34 @@
 import socket
+import sys
+
 
 HOST = '127.0.0.1'
 PORT = 65412
+def main():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #https://stackoverflow.com/questions/6380057/python-binding-socket-address-already-in-use
+            s.bind((HOST, PORT))
+        except:
+            print("Error: Could not bind to port {}. Exiting!".format(PORT))
+            sys.exit(1)
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.bind((HOST, PORT))
-    s.listen()
-    conn, addr = s.accept()
-    with conn:
+        print("The server is ready to receive")
+        s.listen(1)
+        conn, addr = s.accept()
         print('Connected by', addr)
         while True:
-            data = conn.recv(1024)
+            
+            
+            
+            data = conn.recv(1024).decode()
             if not data:
                 break
-            conn.sendall(data)
+            print("Received: {} from Client".format(data))
+            data = data.upper() + "123 from Server"
+            conn.sendall(data.encode())
+          
+
+
+if __name__ == '__main__':
+    main()

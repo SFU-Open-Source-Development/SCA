@@ -2,7 +2,7 @@ import socket
 import sys
 
 
-HOST = '192.168.1.70'
+HOST = '127.0.0.1'
 PORT = 65412
 def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -16,9 +16,10 @@ def main():
         print("The server is ready to receive")
         s.listen(1)
         conn, addr = s.accept()
+        print('Connected by', addr)
         while True:
             
-            print('Connected by', addr)
+            
             
             data = conn.recv(1024).decode()
             if not data:

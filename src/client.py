@@ -10,11 +10,9 @@ while True:
     print(client)
     while True:
         sentence = input('Input Message: ')
-        sentence = str(sentence.split())
-        print(sentence)
         client.send(sentence.encode())
         
-        data = client.recv(4096)
+        data = client.recv(1024)
 
         print('Received: ', data.decode())
         # client.close()

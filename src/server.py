@@ -2,7 +2,7 @@ import socket
 import sys
 
 
-HOST = '192.168.1.70'
+HOST = '127.0.0.1'
 PORT = 65412
 def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -20,12 +20,15 @@ def main():
             
             print('Connected by', addr)
             
-            data = conn.recv(1024).decode()
+            data = conn.recv(4096).decode()
             if not data:
                 break
             print("Received: {} from Client".format(data))
-            data = data.upper() + "123 from Server"
-            conn.sendall(data.encode())
+            # data = list(data).append("123")
+            # data = str(data)
+            data = list(data.split(" "))
+            print(data)
+            conn.send(str(data).encode())
           
 
 

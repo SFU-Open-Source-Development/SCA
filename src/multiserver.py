@@ -5,31 +5,78 @@ import threading
 list_client = [] # The clients we have connected to
 clients_lock = threading.Lock()
 dict_client = {}
-
-
+chatroom = {}
+Size = 4096
+def createchatroom(data, client, address, name):
+    client.send("{} received".format(data).encode()) #/host received
+    
+    chatroom_name = client.recv(Size).decode() #receive chatroom
+    client.send("chatroom_name received {}".format(chatroom_name).encode())
+    # chatroom_name = name+str(address[0])
+    chatroom[chatroom_name] = {}
+    chatroom[chatroom_name]["users"] = [name]
+    chatroom[chatroom_name]["Messages"] = []
+   
+    return chatroom_name
+    # return 0
+def joinchatroom(data, client, address, name):
+    client.send("{} received".format(data).encode()) #/join received
+    chatroom_name = client.recv(Size).decode() #receive chatroom
+    client.send("chatroom_name received {}".format(chatroom_name).encode())
+    
+    if chatroom_name in chatroom:
+        chatroom[chatroom_name]["users"].append(name)
+        print(chatroom)
+    else:
+        return False
+    return chatroom_name
+    
 def handle_client(client, address):
     with clients_lock: #when threading.lock() happens, append client info to list
-        list_client.append(client)
-        name = client.recv(1024).decode()
+        # list_client.append(client)
+        name = client.recv(Size).decode()
         print(("Hello "+name))
         dict_client[client] = name
         
         
     while True:
         # print(list_client)
-        data = client.recv(1024).decode()
-        print("Received: {} from Client {}".format(data, dict_client[client]))
-        client.send("ACK".encode())
+        data = client.recv(Size).decode()
+        
+        # print("Received: {} from Client {}".format(data, dict_client[client]))
         if not data:
             client.send("NAK".encode())
             break
+        
+        if (data == "/host"):
+            result = createchatroom(data, client, address, name)
+        # client.send("ACK".encode())
+        elif (data == "/join"):
+            result = joinchatroom(data, client, address, name)
+            if result == False:
+                client.send("NAK".encode())
+                
+            
+
         elif (data == "/exit"):
             
             print("exiting client {}".format(dict_client[client]))
             del dict_client[client]
             client.close()
             break
-
+        else: 
+            if chatroom[result]:
+                
+                message = "{}: {}".format(name, data)
+                chatroom[result]["Messages"].append(message)
+                # print(chatroom)
+                print(chatroom[result]["Messages"][-1])
+                client.send(chatroom[result]["Messages"][-1].encode())
+            else:
+                print("chatroom does not exist")
+                client.send("NAK".encode())
+                    
+                
 
             # client.close()
             # break

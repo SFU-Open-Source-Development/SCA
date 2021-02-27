@@ -21,12 +21,15 @@ def main():
             
             
             
-            data = conn.recv(1024).decode()
+            data = conn.recv(4096).decode()
             if not data:
                 break
             print("Received: {} from Client".format(data))
-            data = data.upper() + "123 from Server"
-            conn.sendall(data.encode())
+            # data = list(data).append("123")
+            # data = str(data)
+            data = list(data.split(" "))
+            print(data)
+            conn.send(str(data).encode())
           
 
 

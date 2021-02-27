@@ -3,10 +3,12 @@ import secrets
 import string
 import json
 import pickle
+import threading
 HOST = '127.0.0.1'
 PORT = 65412
 Size = 4096
 HOST_OR_JOIN = False
+message_lock = threading.Lock()
 def generate_temp_password(length):
 
     alphabet = string.ascii_letters + string.digits
@@ -41,9 +43,14 @@ def joinserver(client, sentence_split):
         HOST_OR_JOIN = False
         exit()
     print( data.decode())
+    print('Received: ', data.decode())
     
+def handle_receive(client):
+    with message_lock:
+        while True:
+            data = client.recv(Size)
+            print(data.decode())
     
-
 # def checkusers(client, sentence) :
 #     client.send(sentence)
 #     data = client.recv(Size)
@@ -77,8 +84,11 @@ def main():
             #     checkusers(client, sentence)   
                 
             elif (HOST_OR_JOIN == True):
-                client.send(sentence.encode())   
-                data = client.recv(Size)
+                client.send(sentence.encode())
+                threading.Thread(target=handle_receive, args=[client]).start()
+                
+                
+                # data = client.recv(Size)
                 # print('Received: ', data.decode())
                 
             if (sentence == "/exit"):

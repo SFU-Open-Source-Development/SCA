@@ -2,7 +2,7 @@ from socket import *
 import sys
 import threading
 
-list_client = [] # The clients we have connected to
+# list_client = [] # The clients we have connected to
 clients_lock = threading.Lock()
 dict_client = {}
 chatroom = {}
@@ -16,9 +16,10 @@ def createchatroom(data, client, address, name):
     chatroom[chatroom_name] = {}
     chatroom[chatroom_name]["users"] = [name]
     chatroom[chatroom_name]["Messages"] = []
-   
+    chatroom[chatroom_name]["client_address"] = {client}
     return chatroom_name
     # return 0
+    
 def joinchatroom(data, client, address, name):
     client.send("{} received".format(data).encode()) #/join received
     chatroom_name = client.recv(Size).decode() #receive chatroom
@@ -26,10 +27,20 @@ def joinchatroom(data, client, address, name):
     
     if chatroom_name in chatroom:
         chatroom[chatroom_name]["users"].append(name)
+        chatroom[chatroom_name]["client_address"].add(client)
         print(chatroom)
     else:
         return False
     return chatroom_name
+
+def sendtoAll(chatroom):
+    for client in chatroom["client_address"]:
+        
+        client.send(chatroom["Messages"][-1].encode())
+        
+        
+    
+    return 0
     
 def handle_client(client, address):
     with clients_lock: #when threading.lock() happens, append client info to list
@@ -64,14 +75,16 @@ def handle_client(client, address):
             del dict_client[client]
             client.close()
             break
+        
         else: 
             if chatroom[result]:
-                
+               
                 message = "{}: {}".format(name, data)
                 chatroom[result]["Messages"].append(message)
                 # print(chatroom)
                 print(chatroom[result]["Messages"][-1])
-                client.send(chatroom[result]["Messages"][-1].encode())
+                sendtoAll(chatroom[result])
+
             else:
                 print("chatroom does not exist")
                 client.send("NAK".encode())
